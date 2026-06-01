@@ -67,238 +67,64 @@ XML History Format
   <!-- ... up to 10 entries, oldest dropped first -->
 ```
 
-### python
-```
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import List
-import xml.etree.ElementTree as ET
-import os
-
-
-# =========================
-# Models
-# =========================
-
-@dataclass(frozen=True)
-class CalculationRecord:
-    operation: str
-    operand1: float
-    operand2: float
-    result: float
-    timestamp: datetime
-
-
-# =========================
-# Interfaces
-# =========================
-
-class ICalculator(ABC):
-
-    @abstractmethod
-    def add(self, a: float, b: float) -> float:
-        pass
-
-    @abstractmethod
-    def subtract(self, a: float, b: float) -> float:
-        pass
-
-    @abstractmethod
-    def multiply(self, a: float, b: float) -> float:
-        pass
-
-    @abstractmethod
-    def divide(self, a: float, b: float) -> float:
-        pass
-
-
-class IHistoryRepository(ABC):
-
-    @abstractmethod
-    def load(self) -> List[CalculationRecord]:
-        pass
-
-    @abstractmethod
-    def save(self, records: List[CalculationRecord]) -> None:
-        pass
-
-
-class ICalculatorService(ABC):
-
-    @abstractmethod
-    def calculate(self, operation: str, a: float, b: float) -> float:
-        pass
-
-    @abstractmethod
-    def get_history(self) -> List[CalculationRecord]:
-        pass
-
-    @abstractmethod
-    def clear_history(self) -> None:
-        pass
-
-
-# =========================
-# Calculator
-# =========================
-
-class Calculator(ICalculator):
-
-    def add(self, a: float, b: float) -> float:
-        return a + b
-
-    def subtract(self, a: float, b: float) -> float:
-        return a - b
-
-    def multiply(self, a: float, b: float) -> float:
-        return a * b
-
-    def divide(self, a: float, b: float) -> float:
-        if b == 0:
-            raise ZeroDivisionError("Cannot divide by zero")
-        return a / b
-
-
-# =========================
-# XML Repository
-# =========================
-
-class XmlHistoryRepository(IHistoryRepository):
-
-    def __init__(self, file_path: str):
-        self._file_path = file_path
-
-    def load(self) -> List[CalculationRecord]:
-
-        if not os.path.exists(self._file_path):
-            return []
-
-        tree = ET.parse(self._file_path)
-        root = tree.getroot()
-
-        records = []
-
-        for entry in root.findall("Entry"):
-            records.append(
-                CalculationRecord(
-                    operation=entry.findtext("Operation"),
-                    operand1=float(entry.findtext("Operand1")),
-                    operand2=float(entry.findtext("Operand2")),
-                    result=float(entry.findtext("Result")),
-                    timestamp=datetime.fromisoformat(
-                        entry.findtext("Timestamp").replace("Z", "+00:00")
-                    )
-                )
-            )
-
-        return records
-
-    def save(self, records: List[CalculationRecord]) -> None:
-
-        records = records[-10:]  # keep last 10
-
-        root = ET.Element("CalculationHistory")
-
-        for record in records:
-            entry = ET.SubElement(root, "Entry")
-
-            ET.SubElement(entry, "Operation").text = record.operation
-            ET.SubElement(entry, "Operand1").text = str(record.operand1)
-            ET.SubElement(entry, "Operand2").text = str(record.operand2)
-            ET.SubElement(entry, "Result").text = str(record.result)
-            ET.SubElement(entry, "Timestamp").text = (
-                record.timestamp.astimezone(timezone.utc)
-                .isoformat()
-                .replace("+00:00", "Z")
-            )
-
-        tree = ET.ElementTree(root)
-        tree.write(
-            self._file_path,
-            encoding="utf-8",
-            xml_declaration=True
-        )
-
-
-# =========================
-# Calculator Service
-# =========================
-
-class CalculatorService(ICalculatorService):
-
-    def __init__(
-        self,
-        calculator: ICalculator,
-        history_repository: IHistoryRepository
-    ):
-        self._calculator = calculator
-        self._history = history_repository
-
-    def calculate(self, operation: str, a: float, b: float) -> float:
-
-        operation_map = {
-            "Add": self._calculator.add,
-            "Subtract": self._calculator.subtract,
-            "Multiply": self._calculator.multiply,
-            "Divide": self._calculator.divide,
-        }
-
-        if operation not in operation_map:
-            raise ValueError(f"Unsupported operation: {operation}")
-
-        result = operation_map[operation](a, b)
-
-        history = list(self._history.load())
-
-        history.append(
-            CalculationRecord(
-                operation=operation,
-                operand1=a,
-                operand2=b,
-                result=result,
-                timestamp=datetime.now(timezone.utc)
-            )
-        )
-
-        self._history.save(history)
-
-        return result
-
-    def get_history(self) -> List[CalculationRecord]:
-        return self._history.load()
-
-    def clear_history(self) -> None:
-        self._history.save([])
-
-
-# =========================
-# Example Usage
-# =========================
-
-if __name__ == "__main__":
-
-    calculator = Calculator()
-    repository = XmlHistoryRepository("history.xml")
-
-    service = CalculatorService(
-        calculator=calculator,
-        history_repository=repository
-    )
-
-    print(service.calculate("Add", 10, 5))
-    print(service.calculate("Multiply", 3, 4))
-
-    for record in service.get_history():
-        print(record)
-```
-
-</CalculationHistory>
-```
-
 ### Expectations
 - Test Project Structure
 - Project Dependencies
 - Test Inventory
-----
-   TestId  TestName   Inut  Expected Behavior
+
+## Test Project Structure
+Recommended layout for this project:
+
+- `src/`
+  - `calculator.py` or `calculator/__init__.py`
+  - `calculator/models.py`
+  - `calculator/interfaces.py`
+  - `calculator/repository.py`
+  - `calculator/service.py`
+- `tests/unit/`
+  - `test_calculator.py`
+  - `test_history_repository.py`
+- `tests/integration/`
+  - `test_calculator_service.py`
+  - `test_xml_history_repository.py`
+- `requirements.txt`
+- `requirements-dev.txt`
+- `README.md`
+
+This keeps pure logic unit tests separate from integration tests that involve history persistence and file I/O.
+
+## Project Dependencies
+Minimal dependencies for this Python project:
+
+## Test Inventory
+The tests are separated into unit tests for isolated behavior and integration tests for end-to-end service + persistence behavior.
+
+### Unit Test Inventory
+TestId | TestName | Input | Expected Behavior
+--- | --- | --- | ---
+U001 | `Calculator_Add_ReturnsSum` | `a=10, b=5` | Returns `15`
+U002 | `Calculator_Subtract_ReturnsDifference` | `a=10, b=5` | Returns `5`
+U003 | `Calculator_Multiply_ReturnsProduct` | `a=10, b=5` | Returns `50`
+U004 | `Calculator_Divide_ReturnsQuotient` | `a=10, b=5` | Returns `2`
+U005 | `Calculator_Divide_ByZero_Raises` | `a=10, b=0` | Raises `ZeroDivisionError`
+U006 | `CalculatorService_UnsupportedOperation_Raises` | `operation='Mod', a=10, b=5` | Raises `ValueError`
+U007 | `XmlHistoryRepository_Load_MissingFile_ReturnsEmptyList` | missing file path | Returns `[]`
+U008 | `XmlHistoryRepository_Save_AndLoad_Roundtrip` | save one record then load | Loads record with same values
+U009 | `XmlHistoryRepository_Save_TrimsToLast10` | save 12 records | Saved history contains only last 10 entries
+
+### Integration Test Inventory
+TestId | TestName | Input | Expected Behavior
+--- | --- | --- | ---
+I001 | `CalculatorService_Calculate_Add_AppendsHistory` | `operation='Add', a=3, b=4` | Returns `7` and history contains new record
+I002 | `CalculatorService_Calculate_Divide_ViaRepository` | `operation='Divide', a=20, b=4` | Returns `5` and history persists to XML file
+I003 | `CalculatorService_GetHistory_ReturnsSavedRecords` | existing XML history file | Returns same records from repository
+I004 | `CalculatorService_ClearHistory_EmptiesRepository` | call `clear_history()` | Repository file contains empty history list
+I005 | `CalculatorService_History_MaximumSizeIs10` | calculate 11 times | History load returns only last 10 records
+
+## Best Decisions
+- Keep unit tests isolated: test `Calculator` and `XmlHistoryRepository` independently.
+- Keep integration tests focused on `CalculatorService` with `XmlHistoryRepository` using a temporary file.
+- Use temporary files or fixtures for repository integration tests so tests do not depend on a fixed file path.
+- Use `pytest` fixtures to create and clean up test resources.
+- Treat exceptions as behavior: verify `ZeroDivisionError` and unsupported operation handling explicitly.
+
