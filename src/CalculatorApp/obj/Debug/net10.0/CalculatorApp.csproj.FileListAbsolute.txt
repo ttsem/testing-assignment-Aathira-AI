@@ -1,0 +1,12 @@
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/bin/Debug/net10.0/CalculatorApp.deps.json
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/bin/Debug/net10.0/CalculatorApp.dll
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/bin/Debug/net10.0/CalculatorApp.pdb
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.AssemblyInfoInputs.cache
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.AssemblyInfo.cs
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.csproj.CoreCompileInputs.cache
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.sourcelink.json
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.dll
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/refint/CalculatorApp.dll
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/CalculatorApp.pdb
+/workspaces/testing-assignment-Aathira-AI/src/CalculatorApp/obj/Debug/net10.0/ref/CalculatorApp.dll
